@@ -1,0 +1,1 @@
+"""SafeSpace backend application package."""
