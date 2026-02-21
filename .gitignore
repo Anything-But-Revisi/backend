@@ -25,6 +25,7 @@ wheels/
 venv/
 env/
 ENV/
+safespace/
 bin/
 include/
 lib/
@@ -58,12 +59,14 @@ Thumbs.db
 # --- Logs ---
 *.log
 
-# --- ENV ---
-venv/
-.env
-
 # --- Kubernetes ---
 # Jangan commit file konfigurasi Kubernetes yang berisi informasi sensitif
-deployment.yaml
-ingress.yaml
-kubeconfig.yaml
+kube/deployment.yaml
+kube/ingress.yaml
+kube/kubeconfig.yaml
+kube/secret.yaml
+
+# --- Testing ---
+.pytest_cache/
+.coverage
+htmlcov/
