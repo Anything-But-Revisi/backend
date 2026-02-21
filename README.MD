@@ -102,20 +102,90 @@ Response (204): No content
 
 See [SESSIONS.md](SESSIONS.md) for detailed session API documentation, architecture, and security considerations.
 
+## Sexual Violence Report Generation API
+
+Generate formal Sexual Violence Complaint Forms (FORMULIR PENGADUAN KEKERASAN SEKSUAL) from structured incident data using Gemini LLM integration.
+
+### Create Report
+```bash
+POST /api/v1/sessions/{session_id}/report
+
+{
+  "location": "kampus",
+  "perpetrator": "lecturer",
+  "description": "inappropriate comments",
+  "evidence": "witness",
+  "user_goal": "document safely"
+}
+```
+
+Response (201):
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "session_id": "550e8400-e29b-41d4-a716-446655440000",
+  "location": "kampus",
+  "perpetrator": "lecturer",
+  "description": "inappropriate comments",
+  "evidence": "witness",
+  "user_goal": "document safely",
+  "generated_document": "## FORMULIR PENGADUAN KEKERASAN SEKSUAL\n\n### I. IDENTIFIKASI KEBUTUHAN\n...",
+  "created_at": "2026-02-21T10:30:45.123456"
+}
+```
+
+**Request Fields (Enums):**
+- `location`: "public space" | "online" | "kampus" | "sekolah" | "workplace"
+- `perpetrator`: "supervisor" | "colleague" | "lecturer" | "client" | "stranger"
+- `description`: "inappropriate comments" | "unwanted physical touch" | "repeated pressure" | "threat or coercion" | "digital harassment"
+- `evidence`: "messages" | "emails" | "witness" | "none"
+- `user_goal`: "understand the risk" | "document safely" | "consider reporting" | "explore options"
+
+### Retrieve Report
+```bash
+GET /api/v1/sessions/{session_id}/report
+```
+
+Response (200):
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "session_id": "550e8400-e29b-41d4-a716-446655440000",
+  "location": "kampus",
+  "perpetrator": "lecturer",
+  "description": "inappropriate comments",
+  "evidence": "witness",
+  "user_goal": "document safely",
+  "generated_document": "## FORMULIR PENGADUAN KEKERASAN SEKSUAL\n...",
+  "created_at": "2026-02-21T10:30:45.123456"
+}
+```
+
+**Notes:**
+- Reports are scoped to sessions and automatically deleted when parent session is deleted (cascade delete)
+- If Gemini report generation fails, report data is preserved with `generated_document=null` (POST returns 500)
+- Generated reports use fixed structure: I. Identifikasi Kebutuhan, II. Identifikasi Pelaku, III. Kronologi Kejadian, IV. Bukti Terlampir
+- Reports are generated in Indonesian using first-person narrative perspective
+
 ## Project Structure
 
 ```
 app/
-  main.py                - FastAPI application with health check endpoints
+  main.py                - FastAPI application with health check and router registration
   config.py              - Environment configuration and database credentials management
   database.py            - PostgreSQL connection pool and session management
   models/
     session.py           - Anonymous session SQLAlchemy ORM model (UUID pk)
+    report.py            - Sexual violence incident report SQLAlchemy ORM model
   schemas/
     session.py           - Pydantic validation schemas for sessions
+    report.py            - Pydantic validation schemas for reports with Enum fields
+  services/
+    report.py            - Report generation service using Gemini LLM
   api/
     v1/
       sessions.py        - FastAPI session endpoints (POST create, DELETE remove)
+      report.py          - FastAPI report endpoints (POST create, GET retrieve)
 tests/
   test_config.py         - Configuration module tests
   test_database.py       - Database integration tests  
@@ -123,6 +193,10 @@ tests/
   test_session_model.py  - Session ORM model tests
   test_session_schemas.py - Session Pydantic schema tests
   test_session_endpoints.py - Session API endpoint tests
+  test_report_model.py   - Report ORM model and relationship tests
+  test_report_schemas.py - Report Pydantic schema and Enum validation tests
+  test_report_service.py - Report generation service tests with mocked Gemini API
+  test_report_endpoints.py - Report API endpoint integration tests
 .env.example             - Environment variable template (copy to .env)
 SETUP.md                 - Detailed database setup and troubleshooting guide
 SESSIONS.md              - Anonymous session system documentation
@@ -157,6 +231,9 @@ See `.env.example` for all available options. Key variables:
 | `DB_POOL_MAX_SIZE` | 20 | Max connection pool size |
 | `APP_HOST` | 0.0.0.0 | Application listen address |
 | `APP_PORT` | 8000 | Application port |
+| `GOOGLE_API_KEY` | (required for reports) | Google Generative AI API key for Gemini LLM integration |
+
+**Important:** To enable report generation, set `GOOGLE_API_KEY` environment variable with your Gemini API credentials from [Google AI Studio](https://ai.google.dev/)
 
 ## Current Features
 
@@ -172,6 +249,12 @@ See `.env.example` for all available options. Key variables:
 - ✅ Session creation endpoint (`POST /api/v1/sessions`)
 - ✅ Session deletion endpoint (`DELETE /api/v1/sessions/{session_id}`)
 - ✅ Hard delete strategy (permanent user data removal)
+- ✅ Sexual violence report generation using Gemini LLM
+- ✅ Report creation with structured incident data (location, perpetrator, description, evidence, user_goal Enums)
+- ✅ Automatic generation of formal complaint form narratives in Indonesian
+- ✅ Report retrieval endpoint (`GET /api/v1/sessions/{session_id}/report`)
+- ✅ Session-scoped report management with cascade delete
+- ✅ Nullable generated_document field for resilience on LLM failures
 
 ## Troubleshooting
 

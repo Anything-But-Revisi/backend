@@ -17,7 +17,13 @@ from sqlalchemy.pool import NullPool, QueuePool
 from sqlalchemy import text
 
 from app.config import get_db_config
+
+# --- PINDAHKAN IMPORT INI KE SINI (DI LUAR FUNGSI) ---
+# Memastikan semua model terdaftar di Base.metadata sebelum aplikasi menyala
+from app.models.session import Base, Session
 from app.models.message import Message 
+from app.models.report import Report
+# -----------------------------------------------------
 
 logger = logging.getLogger(__name__)
 
@@ -70,13 +76,12 @@ async def init_database() -> None:
             autocommit=False,
         )
         
-        # Create all tables
-        from app.models.session import Base
-        from app.models.message import Message  # Ensure Message model is loaded
+        # --- HAPUS IMPORT LOKAL DI SINI KARENA SUDAH DIPINDAH KE ATAS ---
+        # (Cukup jalankan create_all saja)
         async with _engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
             logger.info("Database tables created/verified successfully")
-        
+            
         logger.info("Database connection pool initialized successfully")
         
     except Exception as e:

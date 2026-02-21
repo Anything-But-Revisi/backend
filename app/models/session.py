@@ -5,7 +5,7 @@ Defines Session model for anonymous user sessions.
 
 from sqlalchemy import Column, DateTime
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 from datetime import datetime
 import uuid
 
@@ -34,6 +34,14 @@ class Session(Base):
         default=datetime.utcnow,
         nullable=False,
         doc="Session creation timestamp (UTC)"
+    )
+    
+    # Relationships
+    reports = relationship(
+        "Report",
+        back_populates="session",
+        cascade="all, delete-orphan",
+        doc="Reports (incident forms) associated with this session"
     )
     
     def __repr__(self) -> str:
