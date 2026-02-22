@@ -21,19 +21,19 @@
 
 ```bash
 # Build Docker image
-docker build -t <your-registry>/safespace-backend:latest .
+docker build -t etioniz/safespace-backend:latest .
 
 # Login to registry (if not already logged in)
 docker login
 
 # Push image to registry
-docker push <your-registry>/safespace-backend:latest
+docker push etioniz/safespace-backend:latest
 
 # Verify image is accessible
-docker pull <your-registry>/safespace-backend:latest
+docker pull etioniz/safespace-backend:latest
 ```
 
-Replace `<your-registry>` dengan Docker Hub username atau private registry URL.
+Replace `etioniz` dengan Docker Hub username atau private registry URL.
 
 ## Step 2: Create Kubernetes Namespace
 
@@ -173,7 +173,7 @@ kubectl get pods -n anything-but-revisi
 ```bash
 # Update image tag
 kubectl set image deployment/safespace-backend \
-  safespace-backend=<your-registry>/safespace-backend:v1.0 \
+  safespace-backend=etioniz/safespace-backend:v1.0 \
   -n anything-but-revisi
 
 # Check rollout status
