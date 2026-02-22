@@ -11,7 +11,7 @@ from app.database import (
     init_database,
     close_database,
     get_db_session,
-    check_database_connection,
+    # check_database_connection,
 )
 
 

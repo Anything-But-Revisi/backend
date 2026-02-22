@@ -2,7 +2,7 @@
 
 ## Why
 
-SafeSpace currently provides anonymous session infrastructure but lacks an AI companion to deliver empathetic, responsive emotional support. Integrating Google Gemini (gemini-2.5-flash model) enables the platform to provide real-time, context-aware emotional support conversations that validate user feelings and maintain session history. This is essential for SafeSpace's core mission of providing accessible mental health support.
+SafeSpace currently provides anonymous session infrastructure but lacks an AI companion to deliver empathetic, responsive emotional support. Integrating Google Gemini (gemini-2.5-flash-lite model) enables the platform to provide real-time, context-aware emotional support conversations that validate user feelings and maintain session history. This is essential for SafeSpace's core mission of providing accessible mental health support.
 
 ## What Changes
 

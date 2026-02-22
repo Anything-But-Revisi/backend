@@ -23,7 +23,7 @@ Fokus pada perasaan mereka saat ini. Jika ada indikasi bahaya darurat, sarankan 
 
 def get_gemini_model():
     return genai.GenerativeModel(
-        model_name="gemini-2.5-flash",
+        model_name="gemini-2.5-flash-lite",
         system_instruction=SYSTEM_INSTRUCTION
     )
 

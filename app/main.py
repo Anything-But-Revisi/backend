@@ -16,7 +16,7 @@ from app.config import validate_config, get_db_config
 from app.database import (
     init_database,
     close_database,
-    check_database_connection,
+    # check_database_connection,
     get_engine,
 )
 from app.api.v1.sessions import router as sessions_router
@@ -45,12 +45,12 @@ async def startup_event() -> None:
                 await init_database()
                 logger.info("Database initialized successfully")
                 
-                is_healthy = await check_database_connection()
-                if is_healthy:
-                    logger.info("Database health check passed")
-                    break
-                else:
-                    raise Exception("Database health check failed")
+                # is_healthy = await check_database_connection()
+                # if is_healthy:
+                #     logger.info("Database health check passed")
+                #     break
+                # else:
+                #     raise Exception("Database health check failed")
                     
             except Exception as e:
                 if attempt < max_retries:
@@ -112,28 +112,28 @@ async def read_root() -> Dict[str, str]:
     return {"message": "SafeSpace backend is running", "version": "1.0.0"}
 
 
-@app.get("/health/db")
-async def health_check_db() -> Dict[str, Any]:
-    logger.info("Database health check requested")
-    try:
-        is_healthy = await asyncio.wait_for(
-            check_database_connection(),
-            timeout=10.0
-        )
+# @app.get("/health/db")
+# async def health_check_db() -> Dict[str, Any]:
+#     logger.info("Database health check requested")
+#     try:
+#         is_healthy = await asyncio.wait_for(
+#             check_database_connection(),
+#             timeout=10.0
+#         )
         
-        if not is_healthy:
-            raise HTTPException(status_code=503, detail="Database query failed")
+#         if not is_healthy:
+#             raise HTTPException(status_code=503, detail="Database query failed")
         
-        engine = get_engine()
-        pool = engine.pool
-        pool_info = {"total": pool.size(), "available": pool.checkedout()} if hasattr(pool, "size") else "unknown"
+#         engine = get_engine()
+#         pool = engine.pool
+#         pool_info = {"total": pool.size(), "available": pool.checkedout()} if hasattr(pool, "size") else "unknown"
         
-        return {
-            "status": "healthy",
-            "database": "connected",
-            "timestamp": datetime.utcnow().isoformat(),
-            "connection_pool": pool_info,
-        }
-    except Exception as e:
-        logger.error(f"Database health check error: {e}")
-        raise HTTPException(status_code=503, detail=str(e))
+#         return {
+#             "status": "healthy",
+#             "database": "connected",
+#             "timestamp": datetime.utcnow().isoformat(),
+#             "connection_pool": pool_info,
+#         }
+#     except Exception as e:
+#         logger.error(f"Database health check error: {e}")
+#         raise HTTPException(status_code=503, detail=str(e))

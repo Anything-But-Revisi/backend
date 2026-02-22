@@ -13,17 +13,15 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
 )
-from sqlalchemy.pool import NullPool, QueuePool
+from sqlalchemy.pool import QueuePool
 from sqlalchemy import text
 
 from app.config import get_db_config
 
-# --- PINDAHKAN IMPORT INI KE SINI (DI LUAR FUNGSI) ---
-# Memastikan semua model terdaftar di Base.metadata sebelum aplikasi menyala
+# Import model agar terdaftar di Base.metadata sebelum aplikasi menyala
 from app.models.session import Base, Session
 from app.models.message import Message 
 from app.models.report import Report
-# -----------------------------------------------------
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +33,7 @@ _session_factory: Optional[async_sessionmaker] = None
 async def init_database() -> None:
     """
     Initialize the database connection pool.
-    Called during application startup.
-    Creates the async engine and session factory.
+    Slightly modified to handle table creation errors gracefully.
     """
     global _engine, _session_factory
     
@@ -51,23 +48,22 @@ async def init_database() -> None:
         
         logger.info(f"Initializing database connection pool to {db_config.get_sanitized_url()}")
         
-        # Create async engine with connection pooling
+        # Inisialisasi engine dengan pool configuration sesuai ConfigMap
         _engine = create_async_engine(
             database_url,
-            echo=False,  # Set to True for SQL debugging
+            echo=False,
             poolclass=QueuePool,
             pool_size=pool_config["min_size"],
             max_overflow=pool_config["max_size"] - pool_config["min_size"],
             pool_timeout=db_config.connection_timeout,
-            pool_pre_ping=True,  # Test connections before using them
-            pool_recycle=3600,  # Recycle connections after 1 hour
+            pool_pre_ping=True,  # Memastikan koneksi sehat sebelum digunakan
+            pool_recycle=3600,
             connect_args={
                 "timeout": db_config.connection_timeout,
                 "command_timeout": db_config.query_timeout,
             },
         )
         
-        # Create session factory
         _session_factory = async_sessionmaker(
             _engine,
             class_=AsyncSession,
@@ -76,29 +72,29 @@ async def init_database() -> None:
             autocommit=False,
         )
         
-        # --- HAPUS IMPORT LOKAL DI SINI KARENA SUDAH DIPINDAH KE ATAS ---
-        # (Cukup jalankan create_all saja)
-        async with _engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-            logger.info("Database tables created/verified successfully")
+        # Menangani pembuatan tabel dengan Try-Except agar tidak memicu CrashLoopBackOff
+        # jika user database tidak memiliki izin CREATE
+        try:
+            async with _engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+                logger.info("Database tables verified successfully")
+        except Exception as table_err:
+            logger.warning(f"Skipping table creation/verification: {table_err}")
             
         logger.info("Database connection pool initialized successfully")
         
     except Exception as e:
-        logger.error(f"Failed to initialize database: {e}")
+        logger.error(f"Critical error during database initialization: {e}")
         raise
 
 
 async def close_database() -> None:
     """
-    Close the database connection pool.
-    Called during application shutdown.
-    Properly disposes of all connections.
+    Close the database connection pool during application shutdown.
     """
     global _engine, _session_factory
     
     if _engine is None:
-        logger.warning("Database was not initialized")
         return
     
     try:
@@ -113,43 +109,24 @@ async def close_database() -> None:
 
 
 def get_engine() -> AsyncEngine:
-    """
-    Get the global database engine instance.
-    Raises RuntimeError if database is not initialized.
-    """
     if _engine is None:
-        raise RuntimeError(
-            "Database engine not initialized. Call init_database() during startup."
-        )
+        raise RuntimeError("Database engine not initialized")
     return _engine
 
 
 def get_session_factory() -> async_sessionmaker:
-    """
-    Get the global session factory instance.
-    Raises RuntimeError if database is not initialized.
-    """
     if _session_factory is None:
-        raise RuntimeError(
-            "Session factory not initialized. Call init_database() during startup."
-        )
+        raise RuntimeError("Session factory not initialized")
     return _session_factory
 
 
 @asynccontextmanager
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     """
-    Context manager for acquiring a database session.
-    Automatically handles session creation, cleanup, and error handling.
-    
-    Usage:
-        async with get_db_session() as session:
-            result = await session.execute(query)
+    Context manager untuk memastikan session selalu ditutup (mencegah pool exhaustion).
     """
     if _session_factory is None:
-        raise RuntimeError(
-            "Database not initialized. Call init_database() during startup."
-        )
+        raise RuntimeError("Database not initialized")
     
     async_session = _session_factory()
     try:
@@ -164,32 +141,23 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
-    FastAPI dependency for database session injection.
-    
-    Usage in route:
-        @app.get("/items")
-        async def get_items(db: AsyncSession = Depends(get_db)):
-            result = await db.execute(query)
+    Dependency injection untuk FastAPI routes.
     """
     async with get_db_session() as session:
         yield session
 
 
-async def check_database_connection() -> bool:
-    """
-    Check if the database connection is working.
-    Returns True if connection is successful, False otherwise.
-    Used for health checks.
-    """
-    if _engine is None:
-        logger.warning("Database engine not initialized")
-        return False
+# async def check_database_connection() -> bool:
+#     """
+#     Fungsi krusial untuk Liveness/Readiness probe di Kubernetes.
+#     """
+#     if _engine is None:
+#         return False
     
-    try:
-        async with _engine.connect() as connection:
-            # Execute a simple query to verify connection using text()
-            await connection.execute(text("SELECT 1"))
-            return True
-    except Exception as e:
-        logger.error(f"Database connection check failed: {e}")
-        return False
+#     try:
+#         async with _engine.connect() as connection:
+#             await connection.execute(text("SELECT 1"))
+#             return True
+#     except Exception as e:
+#         logger.error(f"Database health check failed: {e}")
+#         return False

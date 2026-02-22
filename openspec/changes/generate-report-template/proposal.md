@@ -23,7 +23,7 @@ Sexual violence survivors often struggle to document their experiences in formal
 
 ## Impact
 
-- New package dependency: Google Generative AI (gemini-2.5-flash) for report generation
+- New package dependency: Google Generative AI (gemini-2.5-flash-lite) for report generation
 - New database table: `reports` with FK constraint to `sessions.id`
 - New service module: `app/services/report.py`
 - New endpoint module: `app/api/v1/report.py`

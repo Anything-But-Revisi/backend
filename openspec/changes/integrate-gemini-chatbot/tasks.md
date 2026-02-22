@@ -22,7 +22,7 @@
 
 - [ ] 3.1 Install google-generativeai package (add to requirements.txt)
 - [ ] 3.2 Create app/services/gemini.py module for Gemini client operations
-- [ ] 3.3 Initialize GenerativeModel with "gemini-2.5-flash" model
+- [ ] 3.3 Initialize GenerativeModel with "gemini-2.5-flash-lite" model
 - [ ] 3.4 Implement system prompt constant with empathetic companion instructions
 - [ ] 3.5 Create function to call Gemini API with message history context
 - [ ] 3.6 Implement error handling for API failures, rate limits, missing key

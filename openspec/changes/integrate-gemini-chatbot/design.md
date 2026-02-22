@@ -2,7 +2,7 @@
 
 ## Context
 
-SafeSpace provides anonymous session infrastructure with database persistence. Users need an AI-powered companion for emotional support conversations. Google Gemini (gemini-2.5-flash) is a capable, fast, and cost-effective LLM suitable for real-time chat applications. The integration must maintain session anonymity, preserve conversation context, and provide empathetic responses.
+SafeSpace provides anonymous session infrastructure with database persistence. Users need an AI-powered companion for emotional support conversations. Google Gemini (gemini-2.5-flash-lite) is a capable, fast, and cost-effective LLM suitable for real-time chat applications. The integration must maintain session anonymity, preserve conversation context, and provide empathetic responses.
 
 Current state:
 - PostgreSQL with async SQLAlchemy connection pool (app/database.py)
@@ -19,7 +19,7 @@ Current state:
 - Enable stateless endpoint design using session_id for all context
 - Maintain anonymity (no user identification in messages or logs)
 - Provide GET endpoint to retrieve full conversation history
-- Support fast response times by leveraging gemini-2.5-flash model
+- Support fast response times by leveraging gemini-2.5-flash-lite model
 
 **Non-Goals:**
 - Real-time streaming to frontend (return complete response after API call)
@@ -174,7 +174,7 @@ GET /api/v1/sessions/{session_id}/chat
 ## Open Questions
 
 1. Should we implement conversation summarization for very long chats? (Future enhancement)
-2. What is acceptable response latency for typical queries? (Need to measure with gemini-2.5-flash)
+2. What is acceptable response latency for typical queries? (Need to measure with gemini-2.5-flash-lite)
 3. Should chat history be visible in user's session, or only to them? (No visibility restrictions initially)
 4. Do we need moderation/safety filtering? (Gemini has built-in safety features; document for users)
 5. Should deleted sessions cascade-delete messages? (Yes, implement as foreign key cascade)

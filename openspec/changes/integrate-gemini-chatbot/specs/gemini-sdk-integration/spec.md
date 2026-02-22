@@ -15,7 +15,7 @@ The system SHALL initialize the Gemini API client with proper credentials.
 
 #### Scenario: Model selection
 - **WHEN** the Gemini client is initialized
-- **THEN** the model is set to "gemini-2.5-flash" for optimal speed and cost
+- **THEN** the model is set to "gemini-2.5-flash-lite" for optimal speed and cost
 
 #### Scenario: Graceful key missing handling
 - **WHEN** GOOGLE_API_KEY is not set
